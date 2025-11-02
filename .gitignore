@@ -4,3 +4,6 @@ mp3.py
 二进制.py
 影音格式转换.py
 音视频合并.py
+build
+dist
+Format_converter.spec

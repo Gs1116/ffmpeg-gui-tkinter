@@ -2,6 +2,44 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import subprocess
 import os
+import sys
+import tempfile
+
+def get_ffmpeg_path():
+    if getattr(sys, 'frozen', False):
+        base_dir = sys._MEIPASS
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    ffmpeg_exe = os.path.join(base_dir, 'ffmpeg.exe')
+    
+    if not os.path.exists(ffmpeg_exe):
+        ffmpeg_exe = extract_ffmpeg()
+    
+    return ffmpeg_exe
+
+def extract_ffmpeg():
+    temp_dir = tempfile.gettempdir()
+    ffmpeg_path = os.path.join(temp_dir, 'ffmpeg_temp.exe')
+    
+    if os.path.exists(ffmpeg_path):
+        return ffmpeg_path
+    
+    try:
+        if getattr(sys, 'frozen', False):
+            import pkgutil
+            ffmpeg_data = pkgutil.get_data(__name__, 'ffmpeg.exe')
+        else:
+            with open('ffmpeg.exe', 'rb') as f:
+                ffmpeg_data = f.read()
+        
+        with open(ffmpeg_path, 'wb') as f:
+            f.write(ffmpeg_data)
+        
+        return ffmpeg_path
+    except Exception as e:
+        messagebox.showerror("错误", f"无法提取 ffmpeg: {str(e)}")
+        return None
 
 SUPPORTED_FORMATS = {
     "视频": {
@@ -65,11 +103,16 @@ def convert(section, input_entry, output_entry, format_var):
         messagebox.showerror("错误", "请选择目标格式！")
         return
 
+    ffmpeg_path = get_ffmpeg_path()
+    if not ffmpeg_path or not os.path.exists(ffmpeg_path):
+        messagebox.showerror("错误", "找不到 ffmpeg，转换无法进行！")
+        return
+
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, os.path.splitext(file_name)[0] + SUPPORTED_FORMATS[section][selected_format]["ext"])
 
     build_command = [
-        "ffmpeg",
+        ffmpeg_path,  # 使用提取的 ffmpeg 路径
         "-i", input_file,
         *SUPPORTED_FORMATS[section][selected_format]["cmd"].split(),
         output_file
