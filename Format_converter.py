@@ -3,7 +3,6 @@ from tkinter import filedialog, messagebox, ttk
 import subprocess
 import os
 
-# 定义支持的文件类型和转换命令（修正后的版本）
 SUPPORTED_FORMATS = {
     "视频": {
         "MP4": {"ext": ".mp4", "cmd": "-c:v libx264 -crf 23 -preset veryfast -c:a aac"},
@@ -35,11 +34,6 @@ SUPPORTED_FORMATS = {
         "GIF": {"ext": ".gif", "cmd": "-vf split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse"},
         "TIF": {"ext": ".tif", "cmd": ""},
         "TGA": {"ext": ".tga", "cmd": ""},
-    },
-    "二进制": {
-        "视频": {"ext": ".mp4", "cmd": "-c:v libx264 -crf 23 -preset veryfast -c:a aac"},
-        "音频": {"ext": ".mp3", "cmd": "-vn -ar 44100 -ac 2 -ab 192k"},
-        "图片": {"ext": ".png", "cmd": "-c:v copy"} 
     }
 }
 
@@ -71,11 +65,9 @@ def convert(section, input_entry, output_entry, format_var):
         messagebox.showerror("错误", "请选择目标格式！")
         return
 
-    # 构建输出文件名
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, os.path.splitext(file_name)[0] + SUPPORTED_FORMATS[section][selected_format]["ext"])
 
-    # 构建 ffmpeg 命令
     build_command = [
         "ffmpeg",
         "-i", input_file,
@@ -89,30 +81,22 @@ def convert(section, input_entry, output_entry, format_var):
     except subprocess.CalledProcessError as e:
         messagebox.showerror("错误", f"转换过程中发生错误：\n{e.stderr.decode()}")
 
-# 创建主窗口
 root = tk.Tk()
 root.geometry("800x500")
 root.title("多媒体格式转换工具")
 
-# 创建四个竖栏的框架
 video_frame = tk.LabelFrame(root, text="视频处理", padx=10, pady=10)
 audio_frame = tk.LabelFrame(root, text="音频处理", padx=10, pady=10)
 image_frame = tk.LabelFrame(root, text="图片处理", padx=10, pady=10)
-binary_frame = tk.LabelFrame(root, text="二进制文件处理", padx=10, pady=10)
 
-# 使用 grid 布局
 video_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 audio_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 image_frame.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
-binary_frame.grid(row=0, column=3, padx=10, pady=10, sticky="nsew")
 
-# 配置每列的权重，使其可以自适应窗口大小
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
-root.grid_columnconfigure(3, weight=1)
 
-# 视频处理部分
 video_file_entry = tk.Entry(video_frame, width=30)
 video_file_entry.pack()
 video_browse_button = tk.Button(video_frame, text="浏览", command=lambda: select_file(video_file_entry))
@@ -128,7 +112,6 @@ video_format_option.pack()
 video_convert_button = tk.Button(video_frame, text="开始转换", command=lambda: convert("视频", video_file_entry, video_output_entry, video_format_var))
 video_convert_button.pack()
 
-# 音频处理部分
 audio_file_entry = tk.Entry(audio_frame, width=30)
 audio_file_entry.pack()
 audio_browse_button = tk.Button(audio_frame, text="浏览", command=lambda: select_file(audio_file_entry))
@@ -144,7 +127,6 @@ audio_format_option.pack()
 audio_convert_button = tk.Button(audio_frame, text="开始转换", command=lambda: convert("音频", audio_file_entry, audio_output_entry, audio_format_var))
 audio_convert_button.pack()
 
-# 图片处理部分
 image_file_entry = tk.Entry(image_frame, width=30)
 image_file_entry.pack()
 image_browse_button = tk.Button(image_frame, text="浏览", command=lambda: select_file(image_file_entry))
@@ -160,21 +142,4 @@ image_format_option.pack()
 image_convert_button = tk.Button(image_frame, text="开始转换", command=lambda: convert("图片", image_file_entry, image_output_entry, image_format_var))
 image_convert_button.pack()
 
-# 二进制文件处理部分
-binary_file_entry = tk.Entry(binary_frame, width=30)
-binary_file_entry.pack()
-binary_browse_button = tk.Button(binary_frame, text="浏览", command=lambda: select_file(binary_file_entry))
-binary_browse_button.pack()
-binary_output_entry = tk.Entry(binary_frame, width=30)
-binary_output_entry.pack()
-binary_output_button = tk.Button(binary_frame, text="选择输出文件夹", command=lambda: select_output_folder(binary_output_entry))
-binary_output_button.pack()
-binary_format_var = tk.StringVar(binary_frame)
-binary_format_var.set(list(SUPPORTED_FORMATS["二进制"].keys())[0])
-binary_format_option = ttk.Combobox(binary_frame, textvariable=binary_format_var, values=list(SUPPORTED_FORMATS["二进制"].keys()))
-binary_format_option.pack()
-binary_convert_button = tk.Button(binary_frame, text="开始转换", command=lambda: convert("二进制", binary_file_entry, binary_output_entry, binary_format_var))
-binary_convert_button.pack()
-
-# 启动主循环
 root.mainloop()
